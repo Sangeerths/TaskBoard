@@ -11,6 +11,10 @@ namespace TaskBoard.WrapperService
         Task<ProjectResponse> CreateProjectAsync(CreateProjectRequest request, Guid userId);
         Task<ProjectResponse> UpdateProjectAsync(Guid projectId, UpdateProjectRequest request, Guid userId);
         Task<ProjectResponse> DeleteProjectAsync(Guid projectId, Guid userId);
+        Task<List<ProjectMemberResponse>> GetProjectMembersAsync(Guid projectId, Guid userId);
+        Task<ProjectMemberResponse> AddProjectMemberAsync(Guid projectId, AddProjectMemberRequest request, Guid userId);
+        Task<ProjectMemberResponse> UpdateProjectMemberAsync(Guid projectId, Guid targetUserId, UpdateProjectMemberRequest request, Guid userId);
+        Task<ResponseBase> RemoveProjectMemberAsync(Guid projectId, Guid targetUserId, Guid userId);
     }
     public class ProjectsWrapperService : IProjectsWrapperService
     {
@@ -50,5 +54,39 @@ namespace TaskBoard.WrapperService
         {
             return _projectsLogic.DeleteProjectAsync(projectId, userId);
         }
+
+
+        public Task<List<ProjectMemberResponse>> GetProjectMembersAsync(
+            Guid projectId,
+            Guid userId)
+        {
+            return _projectsLogic.GetProjectMembersAsync(projectId, userId);
+        }
+
+
+       
+
+        public Task<ProjectMemberResponse> AddProjectMemberAsync(
+            Guid projectId, AddProjectMemberRequest request, Guid userId)
+        {
+            return _projectsLogic.AddProjectMemberAsync(projectId, request, userId);
+        }
+
+        public Task<ProjectMemberResponse> UpdateProjectMemberAsync(
+            Guid projectId, Guid targetUserId,
+            UpdateProjectMemberRequest request, Guid userId)
+        {
+            return _projectsLogic.UpdateProjectMemberAsync(
+                projectId, targetUserId, request, userId);
+        }
+
+        public Task<ResponseBase> RemoveProjectMemberAsync(
+            Guid projectId, Guid targetUserId, Guid userId)
+        {
+            return _projectsLogic.RemoveProjectMemberAsync(
+                projectId, targetUserId, userId);
+        }
+
+
     }
 }

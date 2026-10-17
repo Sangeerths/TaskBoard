@@ -15,6 +15,10 @@ namespace TaskBoard.LogicService
          Task<ProjectResponse> UpdateProjectAsync(Guid projectId, UpdateProjectRequest request, Guid userId);
 
          Task<ProjectResponse> DeleteProjectAsync(Guid projectId, Guid userId);
+        Task<List<ProjectMemberResponse>> GetProjectMembersAsync(Guid projectId, Guid userId);
+        Task<ProjectMemberResponse> AddProjectMemberAsync(Guid projectId, AddProjectMemberRequest request, Guid userId);
+        Task<ProjectMemberResponse> UpdateProjectMemberAsync(Guid projectId, Guid targetUserId,UpdateProjectMemberRequest request, Guid userId);
+        Task<ResponseBase> RemoveProjectMemberAsync(Guid projectId, Guid targetUserId, Guid userId);
     }
     public class ProjectsLogic : IProjectsLogic
     {
@@ -195,5 +199,168 @@ namespace TaskBoard.LogicService
                 Message = "Project deleted successfully"
             };
         }
+
+
+        public async Task<List<ProjectMemberResponse>> GetProjectMembersAsync(
+            Guid projectId,
+            Guid userId)
+        {
+            var project = await _projectsEndpointService.GetProjectAsync(projectId);
+
+            if (project == null)
+            {
+                throw new KeyNotFoundException("Project not found");
+            }
+
+            var isMember = await _projectsEndpointService.IsMemberAsync(projectId, userId);
+
+            if (!isMember)
+            {
+                throw new UnauthorizedAccessException(
+                    "You are not a member of this project");
+            }
+
+            var members = await _projectsEndpointService.GetProjectMembersAsync(projectId);
+
+            return members.Select(pm => new ProjectMemberResponse
+            {
+                StatusCode = 200,
+                Message = "Project members retrieved successfully",
+                ProjectId = pm.ProjectId,
+                UserId = pm.UserId,
+                Email = pm.User.Email,
+                Role = pm.Role,
+                JoinedAt = pm.JoinedAt
+            }).ToList();
+        }
+
+
+      
+
+        public async Task<ProjectMemberResponse> AddProjectMemberAsync(
+            Guid projectId, AddProjectMemberRequest request, Guid userId)
+        {
+            var project = await _projectsEndpointService.GetProjectAsync(projectId);
+
+            if (project == null)
+                throw new KeyNotFoundException("Project not found");
+
+            if (!await CanManageMembersAsync(projectId, userId))
+                throw new UnauthorizedAccessException(
+                    "Only the project owner or an admin can manage members");
+
+            var email = request.Email.Trim();
+            var user = await _projectsEndpointService.GetUserByEmailAsync(email);
+
+            if (user == null)
+                throw new KeyNotFoundException("No user exists with that email");
+
+            if (await _projectsEndpointService.IsMemberAsync(projectId, user.UserId))
+                throw new InvalidOperationException(
+                    "This user is already a project member");
+
+            var member = new ProjectMember
+            {
+                ProjectId = projectId,
+                UserId = user.UserId,
+                Role = request.Role,
+                JoinedAt = DateTime.UtcNow
+            };
+
+            await _projectsEndpointService.AddProjectMemberAsync(member);
+
+            return new ProjectMemberResponse
+            {
+                StatusCode = 201,
+                Message = "Project member added successfully",
+                ProjectId = projectId,
+                UserId = user.UserId,
+                Email = user.Email,
+                Role = member.Role,
+                JoinedAt = member.JoinedAt
+            };
+        }
+
+        public async Task<ProjectMemberResponse> UpdateProjectMemberAsync(
+            Guid projectId, Guid targetUserId,
+            UpdateProjectMemberRequest request, Guid userId)
+        {
+            var project = await _projectsEndpointService.GetProjectAsync(projectId);
+
+            if (project == null)
+                throw new KeyNotFoundException("Project not found");
+
+            if (!await CanManageMembersAsync(projectId, userId))
+                throw new UnauthorizedAccessException(
+                    "Only the project owner or an admin can manage members");
+
+            var target = await _projectsEndpointService.GetProjectMemberAsync(
+                projectId, targetUserId);
+
+            if (target == null)
+                throw new KeyNotFoundException(
+                    "The specified user is not a member of this project");
+
+            if (target.Role == "Owner")
+                throw new InvalidOperationException(
+                    "The project owner's role cannot be changed here");
+
+            target.Role = request.Role;
+            await _projectsEndpointService.SaveChangesAsync();
+
+            return new ProjectMemberResponse
+            {
+                StatusCode = 200,
+                Message = "Project member role updated successfully",
+                ProjectId = projectId,
+                UserId = target.UserId,
+                Email = target.User.Email,
+                Role = target.Role,
+                JoinedAt = target.JoinedAt
+            };
+        }
+
+        public async Task<ResponseBase> RemoveProjectMemberAsync(
+            Guid projectId, Guid targetUserId, Guid userId)
+        {
+            var project = await _projectsEndpointService.GetProjectAsync(projectId);
+
+            if (project == null)
+                throw new KeyNotFoundException("Project not found");
+
+            if (!await CanManageMembersAsync(projectId, userId))
+                throw new UnauthorizedAccessException(
+                    "Only the project owner or an admin can manage members");
+
+            var target = await _projectsEndpointService.GetProjectMemberAsync(
+                projectId, targetUserId);
+
+            if (target == null)
+                throw new KeyNotFoundException(
+                    "The specified user is not a member of this project");
+
+            if (target.Role == "Owner" || project.OwnerId == targetUserId)
+                throw new InvalidOperationException(
+                    "The project owner cannot be removed");
+
+            await _projectsEndpointService.RemoveProjectMemberAsync(target);
+
+            return new ResponseBase
+            {
+                StatusCode = 200,
+                Message = "Project member removed successfully"
+            };
+        }
+
+        private async Task<bool> CanManageMembersAsync(
+            Guid projectId, Guid userId)
+        {
+            var member = await _projectsEndpointService.GetProjectMemberAsync(
+                projectId, userId);
+
+            return member != null &&
+                   (member.Role == "Owner" || member.Role == "Admin");
+        }
+
     }
 }
