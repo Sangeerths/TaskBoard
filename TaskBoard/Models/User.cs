@@ -24,5 +24,8 @@ namespace TaskBoard.Models
             // One User → One Profile
             public UserProfile? UserProfile { get; set; }
 
+        public ICollection<ProjectMember> ProjectMemberships { get; set; }
+    = new List<ProjectMember>();
+
     }
 }

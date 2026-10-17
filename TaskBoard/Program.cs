@@ -4,8 +4,10 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
 using TaskBoard.Data;
+using TaskBoard.EndpointService;
 using TaskBoard.EndpointServices;
 using TaskBoard.Logic;
+using TaskBoard.LogicService;
 using TaskBoard.WrapperService;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +21,9 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<IAuthEndpointService, AuthEndpointService>();
 builder.Services.AddScoped<IAuthLogic, AuthLogic>();
 builder.Services.AddScoped<IAuthWrapperService, AuthWrapperService>();
+builder.Services.AddScoped<IProjectsEndpointService, ProjectsEndpointService>();
+builder.Services.AddScoped<IProjectsLogic, ProjectsLogic>();
+builder.Services.AddScoped<IProjectsWrapperService, ProjectsWrapperService>();
 var jwtSecret = builder.Configuration["Jwt:SecretKey"]
     ?? throw new InvalidOperationException("JWT secret is missing.");
 builder.Services

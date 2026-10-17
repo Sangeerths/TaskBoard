@@ -22,6 +22,65 @@ namespace TaskBoard.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("TaskBoard.Models.Project", b =>
+                {
+                    b.Property<Guid>("ProjectId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ProjectId");
+
+                    b.HasIndex("OwnerId");
+
+                    b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("TaskBoard.Models.ProjectMember", b =>
+                {
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid?>("UserId1")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ProjectId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
+
+                    b.ToTable("ProjectMembers");
+                });
+
             modelBuilder.Entity("TaskBoard.Models.User", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -113,6 +172,40 @@ namespace TaskBoard.Migrations
                     b.ToTable("UserProfiles");
                 });
 
+            modelBuilder.Entity("TaskBoard.Models.Project", b =>
+                {
+                    b.HasOne("TaskBoard.Models.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("TaskBoard.Models.ProjectMember", b =>
+                {
+                    b.HasOne("TaskBoard.Models.Project", "Project")
+                        .WithMany("Members")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TaskBoard.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TaskBoard.Models.User", null)
+                        .WithMany("ProjectMemberships")
+                        .HasForeignKey("UserId1");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("TaskBoard.Models.UserProfile", b =>
                 {
                     b.HasOne("TaskBoard.Models.User", "User")
@@ -124,8 +217,15 @@ namespace TaskBoard.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TaskBoard.Models.Project", b =>
+                {
+                    b.Navigation("Members");
+                });
+
             modelBuilder.Entity("TaskBoard.Models.User", b =>
                 {
+                    b.Navigation("ProjectMemberships");
+
                     b.Navigation("UserProfile");
                 });
 #pragma warning restore 612, 618
