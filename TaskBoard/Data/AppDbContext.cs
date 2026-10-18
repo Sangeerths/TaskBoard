@@ -15,6 +15,7 @@ namespace TaskBoard.Data
         public DbSet<ProjectMember> ProjectMembers { get; set; }
         public DbSet<BoardColumn> BoardColumns { get; set; }
         public DbSet<TaskItem> TaskItems { get; set; }
+        public DbSet<Comment> Comments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -62,6 +63,18 @@ namespace TaskBoard.Data
                 .WithMany()
                 .HasForeignKey(t => t.AssigneeId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.Task)
+                .WithMany()
+                .HasForeignKey(c => c.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
