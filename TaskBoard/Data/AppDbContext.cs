@@ -16,6 +16,7 @@ namespace TaskBoard.Data
         public DbSet<BoardColumn> BoardColumns { get; set; }
         public DbSet<TaskItem> TaskItems { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -75,6 +76,30 @@ namespace TaskBoard.Data
                 .WithMany()
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ActivityLog>()
+                .HasOne(a => a.Project)
+                .WithMany()
+                .HasForeignKey(a => a.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ActivityLog>()
+                .HasOne(a => a.Task)
+                .WithMany()
+                .HasForeignKey(a => a.TaskId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<ActivityLog>()
+                .HasOne(a => a.Actor)
+                .WithMany()
+                .HasForeignKey(a => a.ActorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<ActivityLog>()
+                .HasIndex(a => new { a.ProjectId, a.CreatedAt });
+
+            modelBuilder.Entity<ActivityLog>()
+                .HasIndex(a => new { a.TaskId, a.CreatedAt });
         }
     }
 }

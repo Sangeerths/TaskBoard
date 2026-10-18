@@ -33,6 +33,9 @@ builder.Services.AddScoped<ITasksWrapperService, TasksWrapperService>();
 builder.Services.AddScoped<ICommentsEndpointService, CommentsEndpointService>();
 builder.Services.AddScoped<ICommentsLogic, CommentsLogic>();
 builder.Services.AddScoped<ICommentsWrapperService, CommentsWrapperService>();
+builder.Services.AddScoped<IActivityEndpointService, ActivityEndpointService>();
+builder.Services.AddScoped<IActivityLogic, ActivityLogic>();
+builder.Services.AddScoped<IActivityWrapperService, ActivityWrapperService>();
 var jwtSecret = builder.Configuration["Jwt:SecretKey"]
     ?? throw new InvalidOperationException("JWT secret is missing.");
 builder.Services
