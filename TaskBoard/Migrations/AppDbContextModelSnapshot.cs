@@ -22,6 +22,33 @@ namespace TaskBoard.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("TaskBoard.Models.BoardColumn", b =>
+                {
+                    b.Property<Guid>("ColumnId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ColumnId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("BoardColumns");
+                });
+
             modelBuilder.Entity("TaskBoard.Models.Project", b =>
                 {
                     b.Property<Guid>("ProjectId")
@@ -79,6 +106,53 @@ namespace TaskBoard.Migrations
                     b.HasIndex("UserId1");
 
                     b.ToTable("ProjectMembers");
+                });
+
+            modelBuilder.Entity("TaskBoard.Models.TaskItem", b =>
+                {
+                    b.Property<Guid>("TaskId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AssigneeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ColumnId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("TaskId");
+
+                    b.HasIndex("AssigneeId");
+
+                    b.HasIndex("ColumnId");
+
+                    b.ToTable("TaskItems");
                 });
 
             modelBuilder.Entity("TaskBoard.Models.User", b =>
@@ -172,6 +246,17 @@ namespace TaskBoard.Migrations
                     b.ToTable("UserProfiles");
                 });
 
+            modelBuilder.Entity("TaskBoard.Models.BoardColumn", b =>
+                {
+                    b.HasOne("TaskBoard.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("TaskBoard.Models.Project", b =>
                 {
                     b.HasOne("TaskBoard.Models.User", "Owner")
@@ -206,6 +291,24 @@ namespace TaskBoard.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TaskBoard.Models.TaskItem", b =>
+                {
+                    b.HasOne("TaskBoard.Models.User", "Assignee")
+                        .WithMany()
+                        .HasForeignKey("AssigneeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TaskBoard.Models.BoardColumn", "Column")
+                        .WithMany("Tasks")
+                        .HasForeignKey("ColumnId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Assignee");
+
+                    b.Navigation("Column");
+                });
+
             modelBuilder.Entity("TaskBoard.Models.UserProfile", b =>
                 {
                     b.HasOne("TaskBoard.Models.User", "User")
@@ -215,6 +318,11 @@ namespace TaskBoard.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TaskBoard.Models.BoardColumn", b =>
+                {
+                    b.Navigation("Tasks");
                 });
 
             modelBuilder.Entity("TaskBoard.Models.Project", b =>

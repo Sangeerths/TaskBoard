@@ -24,6 +24,12 @@ builder.Services.AddScoped<IAuthWrapperService, AuthWrapperService>();
 builder.Services.AddScoped<IProjectsEndpointService, ProjectsEndpointService>();
 builder.Services.AddScoped<IProjectsLogic, ProjectsLogic>();
 builder.Services.AddScoped<IProjectsWrapperService, ProjectsWrapperService>();
+builder.Services.AddScoped<IBoardEndpointService, BoardEndpointService>();
+builder.Services.AddScoped<IBoardLogic, BoardLogic>();
+builder.Services.AddScoped<IBoardWrapperService, BoardWrapperService>();
+builder.Services.AddScoped<ITasksEndpointService, TasksEndpointService>();
+builder.Services.AddScoped<ITasksLogic, TasksLogic>();
+builder.Services.AddScoped<ITasksWrapperService, TasksWrapperService>();
 var jwtSecret = builder.Configuration["Jwt:SecretKey"]
     ?? throw new InvalidOperationException("JWT secret is missing.");
 builder.Services
