@@ -8,11 +8,12 @@ namespace TaskBoard.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize]
     public class CommentsController : ControllerBase
     {
-        private readonly CommentsWrapperService _wrapper;
+        private readonly ICommentsWrapperService _wrapper;
 
-        public CommentsController(CommentsWrapperService wrapper)
+        public CommentsController(ICommentsWrapperService wrapper)
         {
             _wrapper = wrapper;
         }

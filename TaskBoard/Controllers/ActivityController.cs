@@ -7,6 +7,7 @@ namespace TaskBoard.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize]
     public class ActivityController : ControllerBase
     {
         private readonly IActivityWrapperService _activityWrapperService;

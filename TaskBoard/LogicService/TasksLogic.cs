@@ -7,17 +7,9 @@ namespace TaskBoard.LogicService
 {
     public interface ITasksLogic
     {
-        Task<TasksListResponse> GetTasksAsync(
-            Guid projectId,
-            Guid userId,
-            TaskFilterRequest request);
-        Task<TaskResponse> CreateTaskAsync(
-            Guid columnId,
-            Guid userId,
-            CreateTaskRequest request);
-        Task<TaskResponse> GetTaskAsync(
-            Guid taskId,
-            Guid userId);
+        Task<TasksListResponse> GetTasksAsync(Guid projectId, Guid userId,TaskFilterRequest request);
+        Task<TaskResponse> CreateTaskAsync(Guid columnId,Guid userId,CreateTaskRequest request);
+        Task<TaskResponse> GetTaskAsync(Guid taskId,Guid userId);
 
         Task<TaskResponse> UpdateTaskAsync(
             Guid taskId,
@@ -36,10 +28,12 @@ namespace TaskBoard.LogicService
     {
         private readonly ITasksEndpointService _tasksEndpointService;
         private readonly IProjectsEndpointService _projectsEndpointService;
-        public TasksLogic(ITasksEndpointService tasksEndpointService, IProjectsEndpointService projectsEndpointService)
+        private readonly IActivityEndpointService _activityEndpointService;
+        public TasksLogic(ITasksEndpointService tasksEndpointService, IProjectsEndpointService projectsEndpointService, IActivityEndpointService activityEndpointService)
         {
             _tasksEndpointService = tasksEndpointService;
             _projectsEndpointService = projectsEndpointService;
+            _activityEndpointService = activityEndpointService;
         }
 
         private static bool IsValidPriority(string priority)
@@ -81,6 +75,7 @@ namespace TaskBoard.LogicService
                 Title = task.Title,
                 Description = task.Description,
                 Priority = task.Priority,
+                Status = task.Status,
                 DueDate = task.DueDate,
                 AssigneeId = task.AssigneeId,
                 Position = task.Position,
@@ -234,6 +229,7 @@ namespace TaskBoard.LogicService
                 Title = request.Title.Trim(),
                 Description = request.Description,
                 Priority = request.Priority,
+                Status = request.Status,
                 DueDate = request.DueDate,
                 AssigneeId = request.AssigneeId,
                 Position = existingTasks.Count,
@@ -242,6 +238,15 @@ namespace TaskBoard.LogicService
             };
 
             await _tasksEndpointService.AddTaskAsync(task);
+            await _activityEndpointService.AddActivityAsync(new ActivityLog
+            {
+                ProjectId = column.ProjectId,
+                TaskId = task.TaskId,
+                ActorId = userId,
+                Action = "TaskCreated",
+                Description = $"Created task '{task.Title}'.",
+                CreatedAt = DateTime.UtcNow
+            });
             await _tasksEndpointService.SaveChangesAsync();
 
             return MapTask(task, 201, "Task created successfully.");
@@ -318,6 +323,14 @@ namespace TaskBoard.LogicService
             if (request.Description != null)
                 task.Description = request.Description;
 
+            if (request.Status != null)
+            {
+                if (!new[] { "Started", "In Progress", "On Hold", "Completed" }.Contains(request.Status, StringComparer.OrdinalIgnoreCase))
+                    return new TaskResponse { StatusCode = 400, Message = "Invalid status. Status must be Started, In Progress, On Hold, or Completed." };
+
+                task.Status = request.Status;
+            }
+
             if (request.Priority != null)
             {
                 if (!IsValidPriority(request.Priority))
@@ -361,6 +374,15 @@ namespace TaskBoard.LogicService
                 task.DueDate = request.DueDate.Value;
 
             task.UpdatedAt = DateTime.UtcNow;
+            await _activityEndpointService.AddActivityAsync(new ActivityLog
+            {
+                ProjectId = task.Column.ProjectId,
+                TaskId = task.TaskId,
+                ActorId = userId,
+                Action = "TaskUpdated",
+                Description = $"Updated task '{task.Title}'.",
+                CreatedAt = DateTime.UtcNow
+            });
 
             await _tasksEndpointService.SaveChangesAsync();
 
@@ -400,6 +422,15 @@ namespace TaskBoard.LogicService
             for (var i = 0; i < remainingTasks.Count; i++)
                 remainingTasks[i].Position = i;
 
+            await _activityEndpointService.AddActivityAsync(new ActivityLog
+            {
+                ProjectId = task.Column.ProjectId,
+                TaskId = task.TaskId,
+                ActorId = userId,
+                Action = "TaskDeleted",
+                Description = $"Deleted task '{task.Title}'.",
+                CreatedAt = DateTime.UtcNow
+            });
             await _tasksEndpointService.SaveChangesAsync();
 
             return new ResponseBase
@@ -487,7 +518,15 @@ namespace TaskBoard.LogicService
             }
 
             task.UpdatedAt = DateTime.UtcNow;
-
+            await _activityEndpointService.AddActivityAsync(new ActivityLog
+            {
+                ProjectId = task.Column.ProjectId,
+                TaskId = task.TaskId,
+                ActorId = userId,
+                Action = "TaskMoved",
+                Description = $"Moved task '{task.Title}' to another column.",
+                CreatedAt = DateTime.UtcNow
+            });
             await _tasksEndpointService.SaveChangesAsync();
 
             return MapTask(task, 200, "Task moved successfully.");

@@ -66,6 +66,7 @@ namespace TaskBoard.LogicService
                             TaskId = t.TaskId,
                             Title = t.Title,
                             Description = t.Description,
+                            Status = t.Status,
                             Position = t.Position,
                             CreatedAt = t.CreatedAt,
                             UpdatedAt = t.UpdatedAt

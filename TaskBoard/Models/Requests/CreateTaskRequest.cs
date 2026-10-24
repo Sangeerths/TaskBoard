@@ -16,6 +16,9 @@ namespace TaskBoard.Models.Requests
             ErrorMessage = "Priority must be Low, Medium, High, or Critical.")]
         public string Priority { get; set; } = "Medium";
 
+        [RegularExpression("^(Started|In Progress|On Hold|Completed)$", ErrorMessage = "Status must be Started, In Progress, On Hold, or Completed.")]
+        public string Status { get; set; } = "Started";
+
         public DateTime? DueDate { get; set; }
 
         public Guid? AssigneeId { get; set; }

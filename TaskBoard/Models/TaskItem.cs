@@ -19,6 +19,9 @@ namespace TaskBoard.Models
         [Required, MaxLength(20)]
         public string Priority { get; set; } = "Medium";
 
+        [Required, MaxLength(20)]
+        public string Status { get; set; } = "Started";
+
         public DateTime? DueDate { get; set; }
 
         public Guid? AssigneeId { get; set; }

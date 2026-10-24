@@ -14,10 +14,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection")
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        npgsql => npgsql.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorCodesToAdd: null)
     ));
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
 builder.Services.AddScoped<IAuthEndpointService, AuthEndpointService>();
 builder.Services.AddScoped<IAuthLogic, AuthLogic>();
 builder.Services.AddScoped<IAuthWrapperService, AuthWrapperService>();
@@ -75,9 +78,32 @@ builder.Services.AddSwaggerGen(options =>
                 new List<string>()
         });
 });
+builder.Services.AddCors(options =>
+{
+    var allowedOrigins = builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<string[]>() ?? ["http://localhost:5173"];
+
+    if (allowedOrigins.Length == 0 || allowedOrigins.Any(string.IsNullOrWhiteSpace))
+        throw new InvalidOperationException(
+            "Configure at least one valid Cors:AllowedOrigins value.");
+
+    options.AddPolicy("FrontendPolicy", policy =>
+    {
+        policy
+            .WithOrigins(allowedOrigins)
+            .WithHeaders("Authorization", "Content-Type", "Accept", "Origin")
+            .AllowAnyMethod();
+    });
+});
 builder.Services.AddAuthorization();
-builder.Services.AddSwaggerGen();
 var app = builder.Build();
+
+// Select the endpoint before applying CORS so endpoint metadata and CORS policy
+// are evaluated together. CORS must still wrap authentication and authorization
+// so their 401/403 responses include the appropriate CORS headers.
+app.UseRouting();
+app.UseCors("FrontendPolicy");
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -87,7 +113,6 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
 

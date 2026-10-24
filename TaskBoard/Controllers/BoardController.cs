@@ -9,6 +9,7 @@ namespace TaskBoard.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize]
     public class BoardController : ControllerBase
     {
         private readonly IBoardWrapperService _boardWrapperService;
