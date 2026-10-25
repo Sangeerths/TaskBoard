@@ -43,6 +43,31 @@ React pages/components → AuthContext/API client → ASP.NET Core API
                                                 → EndpointService → EF Core → PostgreSQL
 ```
 
+### Frontend logic
+
+- `src/main.tsx` mounts the app inside React Strict Mode, React Router, and the
+  authentication provider.
+- `src/App.tsx` defines public landing, login, and registration routes. The
+  `/projects` and `/projects/:id` routes are protected by `ProtectedRoute`.
+- `src/context/AuthContext.tsx` restores the signed-in user through
+  `/api/Auth/me`, manages login/logout, and clears the session after an API
+  `401` response. The bearer token is kept in `sessionStorage` for the current
+  browser tab.
+- `src/services/api.ts` is the shared HTTP client. It reads
+  `VITE_API_BASE_URL`, attaches the bearer token, validates API-relative paths,
+  parses JSON responses, and surfaces API errors. HTTP is allowed only for
+  localhost; remote API URLs must use HTTPS.
+- `src/pages/ProjectsPage.tsx` handles project listing and project create/edit
+  flows. `src/pages/ProjectDetails.tsx` loads the project, board, and members,
+  then coordinates column and task actions.
+- Reusable components handle task forms, project members, task discussions, and
+  column activity. `src/utils/taskStatus.ts` normalizes legacy status aliases
+  and exposes the canonical `Started`, `In Progress`, `On Hold`, and `Completed`
+  options used by the board and task form.
+
+The frontend source is under `frontend/src`; configuration and npm scripts are
+in `frontend/package.json`.
+
 ## Run locally
 
 Prerequisites: .NET 10 SDK, Node.js with npm, and a PostgreSQL database.
