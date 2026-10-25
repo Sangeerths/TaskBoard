@@ -68,6 +68,54 @@ React pages/components → AuthContext/API client → ASP.NET Core API
 The frontend source is under `frontend/src`; configuration and npm scripts are
 in `frontend/package.json`.
 
+## Hosting architecture
+
+TaskBoard uses separate hosting for the application and its database:
+
+```text
+Static frontend host ──serves──▶ User's browser
+                                  │ HTTPS API requests (JWT bearer token)
+                                  ▼
+                         Azure Container Apps
+                         ASP.NET Core API :8080
+                                  │ PostgreSQL over TLS
+                                  ▼
+                         Supabase PostgreSQL
+```
+
+Supabase hosts the PostgreSQL database and stores application data. It does not
+run the ASP.NET Core API. Azure Container Apps runs the API container; the API
+is the only application component that should connect to the database. The
+browser communicates with the API and must never receive the database
+connection string.
+
+### Azure API configuration
+
+Deploy the Docker image built from the repository root to Azure Container Apps
+with ingress targeting container port `8080`. Configure the following settings
+in the Container App, using secret references for credentials:
+
+- `ConnectionStrings__DefaultConnection`: the Supabase PostgreSQL connection
+  string. Keep TLS enabled and use a Supabase connection endpoint compatible
+  with the Container Apps network path.
+- `Jwt__SecretKey`: a strong signing secret shared by the API instances.
+- `Jwt__Issuer` and `Jwt__Audience`: must match the token issuer and audience
+  expected by this API.
+- `Cors__AllowedOrigins__0`: the exact HTTPS origin serving the frontend. Add
+  further origins with `Cors__AllowedOrigins__1`, etc., only when needed.
+
+Keep production values in Azure secrets and environment configuration, not in
+`appsettings.json`, source code, or frontend variables. Only the public API URL
+belongs in the frontend's `VITE_API_BASE_URL` build setting.
+
+### Database release order
+
+Apply EF Core migrations to Supabase once before deploying an API version that
+requires the new schema. Then deploy the API image and confirm the Container App
+is healthy before publishing the matching frontend build. The migration command
+is in [Database migrations](#database-migrations); do not run it independently
+from every API replica.
+
 ## Run locally
 
 Prerequisites: .NET 10 SDK, Node.js with npm, and a PostgreSQL database.
