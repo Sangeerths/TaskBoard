@@ -4,6 +4,10 @@ TaskBoard is a project management app with a React frontend and an ASP.NET Core
 Web API. Organize work into projects and Kanban-style boards, assign tasks,
 track workflow status, and collaborate with comments and activity history.
 
+## Live app
+
+[Open TaskBoard](https://task-board-gilt-nine.vercel.app/)
+
 ## Features
 
 - Register and sign in with JWT bearer tokens.
