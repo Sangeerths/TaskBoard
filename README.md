@@ -108,6 +108,14 @@ in the Container App, using secret references for credentials:
 - `Cors__AllowedOrigins__0`: the exact HTTPS origin serving the frontend. Add
   further origins with `Cors__AllowedOrigins__1`, etc., only when needed.
 
+For the current Vercel deployment, configure these origins on the Container
+App:
+
+```text
+Cors__AllowedOrigins__0=https://task-board-gilt-nine.vercel.app
+Cors__AllowedOrigins__1=http://localhost:5173
+```
+
 Keep production values in Azure secrets and environment configuration, not in
 `appsettings.json`, source code, or frontend variables. Only the public API URL
 belongs in the frontend's `VITE_API_BASE_URL` build setting.
@@ -211,14 +219,24 @@ startup.
 
 ## Docker
 
-Build the container from the repository root:
+Build and publish the API image from the repository root. The image name below
+matches the Docker Hub repository used by the Azure Container App:
 
 ```powershell
-docker build -t taskboard-api .
+docker login
+docker build -t spidybcox/taskboard-api:latest .
+docker push spidybcox/taskboard-api:latest
 ```
 
-The image builds and runs the backend API, which listens on port `8080`. Build
-the frontend separately from `frontend/` with `npm run build` and deploy its
-static `dist/` output to a static web host. Supply database and JWT values
-through the API container platform's secret configuration, and set the allowed
-frontend origin there as well.
+The image builds and runs the ASP.NET Core API, which listens on port `8080`.
+After pushing an updated image, create a new revision in Azure Container Apps
+for `taskboard-api` using `spidybcox/taskboard-api:latest`. Keep the existing
+environment variables and secrets, including the CORS origins above, then
+create the revision and wait until it is running. Azure revisions are immutable;
+pushing an image alone does not update a running revision.
+
+The frontend is built separately from `frontend/` with `npm run build` and its
+`dist/` output is deployed to Vercel. Set `VITE_API_BASE_URL` in the Vercel
+project's build environment to the HTTPS URL of the Azure API. Redeploy the
+frontend when changing that build setting; API-only updates do not require a
+frontend redeploy.
