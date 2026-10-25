@@ -1,0 +1,155 @@
+:root {
+  font-family: "Aptos", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  color: #17233b;
+  background: #f4f7fb;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  color-scheme: light;
+
+  --text: #52627a;
+  --text-h: #17233b;
+  --bg: #f4f7fb;
+  --border: #e2e8f0;
+  --accent: #4f46e5;
+  --accent-bg: rgb(79 70 229 / 9%);
+  --accent-border: rgb(79 70 229 / 30%);
+  --brand-primary: #4f46e5;
+  --brand-hover: #4338ca;
+  --page-bg: #f4f7fb;
+  --surface: #fff;
+  --brand-ink: #17233b;
+  --brand-muted: #64748b;
+  --brand-line: #e2e8f0;
+  --shadow: 0 12px 30px rgb(23 35 59 / 9%);
+  --sans: "Aptos", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --heading: var(--sans);
+  --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: var(--sans);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  color: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgb(79 70 229 / 35%);
+  outline-offset: 2px;
+}
+
+::selection {
+  color: #fff;
+  background: #4f46e5;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: var(--text-h);
+  font-family: var(--heading);
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Shared surfaces and controls */
+.register-card {
+  margin-block: auto;
+  border: 1px solid var(--brand-line);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 18px 50px rgb(23 35 59 / 8%);
+}
+
+.form-grid input,
+.form-grid select,
+.form-grid textarea,
+.task-form input,
+.task-form textarea,
+.task-form select,
+.column-form input,
+.column-edit-form input {
+  border-radius: 10px;
+}
+
+.project-card,
+.board-section,
+.kanban-column,
+.details-message,
+.task-modal,
+.column-edit-modal {
+  border-color: var(--brand-line);
+  box-shadow: 0 10px 28px rgb(23 35 59 / 5%);
+}
+
+@media (max-width: 600px) {
+  .register-card {
+    padding: 22px 18px;
+    border-radius: 16px;
+  }
+}

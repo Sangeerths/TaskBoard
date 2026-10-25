@@ -1,9 +1,8 @@
-# TaskBoard API
+# TaskBoard
 
-TaskBoard is an ASP.NET Core Web API for project workspaces and Kanban-style
-boards. It supports project membership, task assignment and priorities, due
-dates, workflow statuses, comments, and activity history. The API uses JWT
-bearer authentication and PostgreSQL persistence through Entity Framework Core.
+TaskBoard is a project management app with a React frontend and an ASP.NET Core
+Web API. Organize work into projects and Kanban-style boards, assign tasks,
+track workflow status, and collaborate with comments and activity history.
 
 ## Features
 
@@ -15,6 +14,8 @@ bearer authentication and PostgreSQL persistence through Entity Framework Core.
 - Set task priority, due date, and assignee.
 - Add comments and view project or task activity.
 - Explore the API with Swagger UI at the API root.
+- Use a responsive React single-page app for sign-in, projects, boards, task
+  discussions, and project members.
 
 ## Technology
 
@@ -23,22 +24,28 @@ bearer authentication and PostgreSQL persistence through Entity Framework Core.
 - PostgreSQL with Npgsql
 - JWT bearer authentication
 - Docker multi-stage build
+- React 19, TypeScript, and Vite 8 frontend
 
 ## Architecture
 
-HTTP requests flow through controllers, wrapper services, logic services, and
-endpoint services. Controllers handle HTTP concerns; logic services enforce
+The frontend uses page and component modules, an authentication context, and a
+shared API client that attaches JWT bearer tokens to protected requests. HTTP
+requests flow through backend controllers, wrapper services, logic services,
+and endpoint services. Controllers handle HTTP concerns; logic services enforce
 project membership and task rules; endpoint services query and update the
 database through the request-scoped `AppDbContext`.
 
 ```text
-HTTP client → Controllers → WrapperService → LogicService
-                                      → EndpointService → EF Core → PostgreSQL
+React pages/components → AuthContext/API client → ASP.NET Core API
+                                                → Controllers
+                                                → WrapperService
+                                                → LogicService
+                                                → EndpointService → EF Core → PostgreSQL
 ```
 
 ## Run locally
 
-Prerequisites: .NET 10 SDK and a PostgreSQL database.
+Prerequisites: .NET 10 SDK, Node.js with npm, and a PostgreSQL database.
 
 From the repository root, configure local secrets from the `TaskBoard` project
 directory:
@@ -62,6 +69,20 @@ dotnet run --project TaskBoard\TaskBoard.csproj
 
 In Development, Swagger UI is available at the API root. The HTTP and HTTPS
 development URLs are configured in `TaskBoard/Properties/launchSettings.json`.
+
+In a second terminal, configure and start the frontend:
+
+```powershell
+cd frontend
+Copy-Item .env.example .env.local
+npm install
+npm run dev
+```
+
+The frontend runs at `http://localhost:5173` and reads its API URL from
+`VITE_API_BASE_URL`. `.env.local` is ignored by Git; change the example value if
+your local API uses a different URL. For a production frontend, set
+`VITE_API_BASE_URL` to the deployed HTTPS API URL at build time.
 
 ## Configuration
 
@@ -119,6 +140,8 @@ Build the container from the repository root:
 docker build -t taskboard-api .
 ```
 
-The image listens on port `8080`. Supply the required database and JWT values
-through your container platform's secret configuration, and set the allowed
+The image builds and runs the backend API, which listens on port `8080`. Build
+the frontend separately from `frontend/` with `npm run build` and deploy its
+static `dist/` output to a static web host. Supply database and JWT values
+through the API container platform's secret configuration, and set the allowed
 frontend origin there as well.
